@@ -5,6 +5,7 @@ console.log = function (...message) {
 }
 
 async function connectToCube() {
+    console.log('test + connect')
     try {
         console.log("🔍 Scanning for Bluetooth Cube...");
 
