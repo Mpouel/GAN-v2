@@ -3,7 +3,7 @@ import { GANBluetooth } from "gan-web-bluetooth";
 console.log = function(message) {
     document.writeln(message + "<br>");
 }
-
+console.log('test + ===')
 async function connectToCube() {
     console.log('test + connect')
     try {
