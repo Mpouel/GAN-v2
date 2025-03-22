@@ -17,7 +17,7 @@ async function connectToCube() {
         log("🔗 Connected to GATT Server");
 
         const services = await server.getPrimaryServices();
-        log("📡 Services:", services.map(service => service.uuid));
+        log("📡 Services:" + services.map(service => service.uuid));
 
         for (const service of services) {
             const characteristics = await service.getCharacteristics();
@@ -27,7 +27,7 @@ async function connectToCube() {
                 if (char.properties.notify || char.properties.indicate) {
                     char.addEventListener('characteristicvaluechanged', event => {
                         const value = new TextDecoder().decode(event.target.value);
-                        log(`📥 Data from ${char.uuid}:`, value);
+                        log(`📥 Data from ${char.uuid}:` + value);
                     });
                     await char.startNotifications();
                     log(`🔔 Listening for updates from ${char.uuid}`);
@@ -35,7 +35,7 @@ async function connectToCube() {
             }
         }
     } catch (error) {
-        log("❌ Connection Error:", error);
+        log("❌ Connection Error:" + error);
     }
 }
 
