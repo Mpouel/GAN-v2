@@ -1,6 +1,5 @@
 function log(message) {
-    console.log(message);
-    document.querySelector("#logOutput").textContent += message + "\n";
+    document.writeln(message);
 }
 
 async function connectToCube() {
