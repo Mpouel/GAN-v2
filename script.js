@@ -1,41 +1,48 @@
-function log(message) {
-    document.writeln(message + '<br>');
+import { GANBluetooth } from "gan-web-bluetooth";
+
+console.log = function (...message) {
+    message.forEach((mes) => document.writeln(mes + '<br>'))
 }
 
 async function connectToCube() {
     try {
-        log("Requesting Bluetooth Device...");
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: ['battery_service'] // Add specific service UUIDs if needed
+        console.log("🔍 Scanning for Bluetooth Cube...");
+
+        // Initialize GAN Bluetooth
+        const ganBluetooth = new GANBluetooth();
+        const device = await ganBluetooth.requestDevice();
+
+        if (!device) {
+            console.log("❌ No device found.");
+            return;
+        }
+
+        console.log(`✅ Device Found: ${device.name || "Unknown"}`);
+        console.log(`🔢 MAC Address: ${device.address || "N/A"}`);
+        console.log(`🔄 Connecting...`);
+
+        // Connect to the device
+        await ganBluetooth.connect(device);
+
+        console.log("✅ Connected!");
+        console.log(`📡 Services: ${JSON.stringify(device.services, null, 2)}`);
+
+        // Subscribe to notifications (if supported)
+        device.services.forEach(service => {
+            service.characteristics.forEach(async characteristic => {
+                if (characteristic.properties.notify) {
+                    console.log(`📥 Subscribing to ${characteristic.uuid}...`);
+                    await characteristic.startNotifications();
+                    characteristic.addEventListener('characteristicvaluechanged', (event) => {
+                        let value = new TextDecoder().decode(event.target.value);
+                        console.log(`📊 Data from ${characteristic.uuid}: ${value}`);
+                    });
+                }
+            });
         });
 
-        log(`✅ Device Found: ${device.name}`);
-        log(`🔹 ID (UUID-like): ${device.id}`);
-
-        const server = await device.gatt.connect();
-        log("🔗 Connected to GATT Server");
-
-        const services = await server.getPrimaryServices();
-        log("📡 Services:" + services.map(service => service.uuid));
-
-        for (const service of services) {
-            const characteristics = await service.getCharacteristics();
-            for (const char of characteristics) {
-                log(`🔹 Characteristic: ${char.uuid}`);
-
-                if (char.properties.notify || char.properties.indicate) {
-                    char.addEventListener('characteristicvaluechanged', event => {
-                        const value = new TextDecoder().decode(event.target.value);
-                        log(`📥 Data from ${char.uuid}:` + value);
-                    });
-                    await char.startNotifications();
-                    log(`🔔 Listening for updates from ${char.uuid}`);
-                }
-            }
-        }
     } catch (error) {
-        log("❌ Connection Error:" + error);
+        console.log(`❌ Error: ${error.message}`);
     }
 }
 
