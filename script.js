@@ -12,8 +12,8 @@ async function connectToCube() {
         });
 
         log(`✅ Device Found: ${device.name || "Unknown Device"}`);
-        log(`🔢 ID: ${device.id}`);
-        log("🔗 Connecting to GATT Server...");
+        log(`🔢 ID: ${device.id || "Unknown ID"}`);
+        log("🔗 Connecting to GATT Server..."); 
 
         const server = await device.gatt.connect();
 
