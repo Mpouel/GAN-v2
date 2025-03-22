@@ -39,5 +39,4 @@ async function connectToCube() {
     }
 }
 
-// Run the connection function
-connectToCube();
+document.querySelector("#connectButton").addEventListener("click", connectToCube);
