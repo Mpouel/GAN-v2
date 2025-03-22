@@ -4,54 +4,40 @@ function log(message) {
 
 async function connectToCube() {
     try {
-        log("🔍 Requesting Bluetooth Device...");
+        console.log("Requesting Bluetooth Device...");
         const device = await navigator.bluetooth.requestDevice({
             acceptAllDevices: true,
-            optionalServices: ['battery_service', 'device_information']
+            optionalServices: ['battery_service'] // Add specific service UUIDs if needed
         });
 
-        log(`✅ Device Found: ${device.name || "Unknown Device"}`);
-        log(`🔢 ID: ${device.id || "Unknown ID"}`);
-        log("🔗 Connecting to GATT Server..."); 
+        console.log(`✅ Device Found: ${device.name}`);
+        console.log(`🔹 ID (UUID-like): ${device.id}`);
 
         const server = await device.gatt.connect();
+        console.log("🔗 Connected to GATT Server");
 
-        log("📡 Getting Services...");
         const services = await server.getPrimaryServices();
+        console.log("📡 Services:", services.map(service => service.uuid));
 
         for (const service of services) {
-            log(`🛠️ Service UUID: ${service.uuid}`);
             const characteristics = await service.getCharacteristics();
-
             for (const char of characteristics) {
-                log(`   ➡️ Characteristic: ${char.uuid}`);
+                console.log(`🔹 Characteristic: ${char.uuid}`);
 
-                // Read initial value if readable
-                if (char.properties.read) {
-                    const value = await char.readValue();
-                    log(`      📖 Value: ${new TextDecoder().decode(value)}`);
-                }
-
-                // Subscribe to notifications
-                if (char.properties.notify) {
-                    await char.startNotifications();
-                    char.addEventListener('characteristicvaluechanged', (event) => {
+                if (char.properties.notify || char.properties.indicate) {
+                    char.addEventListener('characteristicvaluechanged', event => {
                         const value = new TextDecoder().decode(event.target.value);
-                        log(`      🔔 Notification: ${value}`);
+                        console.log(`📥 Data from ${char.uuid}:`, value);
                     });
+                    await char.startNotifications();
+                    console.log(`🔔 Listening for updates from ${char.uuid}`);
                 }
             }
         }
-
-        // Handle disconnections
-        device.addEventListener('gattserverdisconnected', () => {
-            log("⚠️ Device disconnected! Reconnecting...");
-            connectToCube();
-        });
-
     } catch (error) {
-        log("❌ Error: " + error);
+        console.error("❌ Connection Error:", error);
     }
 }
 
-document.querySelector("#connectButton").addEventListener("click", connectToCube);
+// Run the connection function
+connectToCube();
